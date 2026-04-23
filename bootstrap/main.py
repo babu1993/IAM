@@ -1,0 +1,40 @@
+import psycopg2
+from os import getenv
+import sys
+
+SCHEMA = "IAM"
+IDENTITIES_TABLE_NAME = f"{SCHEMA}.identities"
+USERS_TABLE_NAME = f"{SCHEMA}.users"
+ROOT_USER_ID = getenv("ROOT_USER_ID", "00000000-0000-0000-0000-000000000001")
+DB_PASSWORD = getenv("DB_PASSWORD")
+DB_HOST = getenv("DB_HOST")
+DB_NAME = getenv("DB_NAME")
+DB_USER = getenv("DB_USER")
+DB_PORT = getenv("DB_PORT", "5432")
+
+def main():
+    print("Hello from bootstrap!")
+    try:
+        print("Connecting to PostgreSQL database...")
+        conn = psycopg2.connect(user=DB_USER, password=DB_PASSWORD, host=DB_HOST,
+                                port=DB_PORT, database=DB_NAME)
+        print("Connected!")
+        cur = conn.cursor()
+        cur.execute(f"SELECT * FROM {IDENTITIES_TABLE_NAME} i JOIN {USERS_TABLE_NAME} u ON i.id = u.id WHERE i.id=%s", (ROOT_USER_ID,))
+        rows = cur.fetchall()
+        if len(rows) == 1:
+            print("Root User exists!")
+        else:
+            print("Root User does not exist!")
+            
+        conn.close()
+    except psycopg2.Error as e:
+        print(e)
+        sys.exit(1)
+    except Exception as e:
+        print(e)
+        sys.exit(2)
+
+
+if __name__ == "__main__":
+    main()
