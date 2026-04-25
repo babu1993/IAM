@@ -43,5 +43,5 @@ for i in $(seq 1 30); do
 done
 echo ${DB_PASSWORD}
 podman run --network iam_network --name bootstrap -e DB_PASSWORD=${DB_PASSWORD} -e DB_HOST=database -e DB_USER=${DB_USER} -e DB_NAME=${DB_NAME} bootstrap:latest
-podman run --network iam_network --name identity --detach identity:latest
+podman run --network iam_network --name identity -e DB_PASSWORD=${DB_PASSWORD} -e DB_HOST=database -e DB_USER=${DB_USER} -e DB_NAME=${DB_NAME} --detach identity:latest
 podman run -p 8080:80 --network iam_network --name proxy --detach proxy:latest

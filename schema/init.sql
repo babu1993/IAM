@@ -2,18 +2,19 @@
 -- Please log an issue at https://github.com/pgadmin-org/pgadmin4/issues/new/choose if you find any bugs, including reproduction steps.
 BEGIN;
 create schema if not exists IAM;
+
 CREATE TABLE IF NOT EXISTS IAM.identities
 (
     id uuid,
     name character varying(255) NOT NULL,
     secret bytea NOT NULL,
     salt bytea NOT NULL,
-    created_time timestamp with time zone,
-    updated_time timestamp with time zone,
+    created_time bigint,
+    updated_time bigint,
     type character varying(20),
     status character varying(50),
     PRIMARY KEY (id)
-);
+    );
 
 CREATE TABLE IF NOT EXISTS IAM.users
 (
@@ -23,27 +24,27 @@ CREATE TABLE IF NOT EXISTS IAM.users
     timezone character varying,
     id uuid,
     PRIMARY KEY (id)
-);
+    );
 
 CREATE TABLE IF NOT EXISTS IAM.applications
 (
     id uuid,
     name character varying,
     created_by uuid,
-    created_time timestamp with time zone,
-    updated_time timestamp with time zone,
-    permission_index bigint DEFAULT 1,
+    created_time bigint,
+    updated_time bigint,
+    next_permission_index bigint[],
     PRIMARY KEY (id)
-);
+    );
 
 CREATE TABLE IF NOT EXISTS IAM.sessions
 (
-    session_id character varying[] NOT NULL,
+    session_id character varying NOT NULL,
     user_id uuid NOT NULL,
-    created_time timestamp with time zone NOT NULL,
+    created_time bigint NOT NULL,
     ttl bigint NOT NULL,
     PRIMARY KEY (session_id)
-);
+    );
 
 CREATE TABLE IF NOT EXISTS IAM.perrmissions
 (
@@ -51,14 +52,15 @@ CREATE TABLE IF NOT EXISTS IAM.perrmissions
     id uuid NOT NULL,
     scope character varying COLLATE pg_catalog."default" NOT NULL,
     enum_index bigint NOT NULL,
+    partition_index bigint,
     CONSTRAINT perrmissions_pkey PRIMARY KEY (id)
-);
+    );
 
 ALTER TABLE IF EXISTS IAM.users
     ADD FOREIGN KEY (id)
     REFERENCES IAM.identities (id) MATCH SIMPLE
     ON UPDATE NO ACTION
-    ON DELETE NO ACTION
+       ON DELETE NO ACTION
     NOT VALID;
 
 
@@ -66,7 +68,7 @@ ALTER TABLE IF EXISTS IAM.applications
     ADD FOREIGN KEY (created_by)
     REFERENCES IAM.users (id) MATCH SIMPLE
     ON UPDATE NO ACTION
-    ON DELETE NO ACTION
+       ON DELETE NO ACTION
     NOT VALID;
 
 
@@ -74,7 +76,7 @@ ALTER TABLE IF EXISTS IAM.applications
     ADD FOREIGN KEY (id)
     REFERENCES IAM.identities (id) MATCH SIMPLE
     ON UPDATE NO ACTION
-    ON DELETE NO ACTION
+       ON DELETE NO ACTION
     NOT VALID;
 
 
@@ -82,7 +84,7 @@ ALTER TABLE IF EXISTS IAM.sessions
     ADD FOREIGN KEY (user_id)
     REFERENCES IAM.users (id) MATCH SIMPLE
     ON UPDATE NO ACTION
-    ON DELETE NO ACTION
+       ON DELETE NO ACTION
     NOT VALID;
 
 
@@ -90,6 +92,7 @@ ALTER TABLE IF EXISTS IAM.perrmissions
     ADD FOREIGN KEY (application_id)
     REFERENCES IAM.applications (id) MATCH SIMPLE
     ON UPDATE NO ACTION
-    ON DELETE NO ACTION
+       ON DELETE NO ACTION
     NOT VALID;
+
 END;
